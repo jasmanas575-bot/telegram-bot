@@ -6,9 +6,10 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
-DIFU_API_KEY   = os.environ.get("DIFU_API_KEY", "")
-DIFU_API_URL = "https://api.dify.ai/v1/workflows/run"
-TELEGRAM_BASE  = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
+DIFU_API_KEY = os.environ.get("DIFU_API_KEY", "")
+DIFU_API_URL = "https://api.dify.ai/v1/chat-messages"
+TELEGRAM_BASE = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
+
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
@@ -23,18 +24,18 @@ def send_message(chat_id, text):
 
 def ask_difu(user_message, conversation_id=None):
     headers = {"Authorization": f"Bearer {DIFU_API_KEY}", "Content-Type": "application/json"}
-    body = {"inputs": {"query": user_message}, "response_mode": "blocking", "user": "telegram-bot"}
+    body = {"inputs": {}, "query": user_message, "response_mode": "blocking", "user": "telegram-bot"}
     if conversation_id:
         body["conversation_id"] = conversation_id
     try:
         r = requests.post(DIFU_API_URL, headers=headers, json=body, timeout=30)
         r.raise_for_status()
         data = r.json()
-        answer = data.get("data", {}).get("outputs", {}).get("text", "لم أتمكن من الحصول على رد.")
-        return answer, ""
+        return data.get("answer", "لم أتمكن من الحصول على رد."), data.get("conversation_id", "")
     except Exception as e:
         log.error(f"difu error: {e}")
-        return "حدث خطأ في الاتصال بالذكاء الاصطناعي.", conversation_id or ""
+        return "حدث خطأ في الاتصال بالذكاء الاصطناعي.", ""
+
 @app.route(f"/webhook/{TELEGRAM_TOKEN}", methods=["POST"])
 def webhook():
     try:
@@ -50,7 +51,7 @@ def webhook():
             return jsonify({"ok": True})
         if text == "/start":
             conversations.pop(chat_id, None)
-            send_message(chat_id, "مرحباً! 👋\nأنا بوت مدعوم بـ difu.ai\nأرسل أي سؤال وسأجيبك.")
+            send_message(chat_id, "مرحباً! 👋\nأنا بوت مدعوم بـ dify.ai\nأرسل أي سؤال وسأجيبك.")
             return jsonify({"ok": True})
         if text == "/reset":
             conversations.pop(chat_id, None)
