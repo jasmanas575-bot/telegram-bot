@@ -23,15 +23,14 @@ def send_message(chat_id, text):
 
 def ask_difu(user_message, conversation_id=None):
     headers = {"Authorization": f"Bearer {DIFU_API_KEY}", "Content-Type": "application/json"}
-    body = {"inputs": {}, "query": user_message, "response_mode": "blocking", "user": "telegram-bot"}
-    if conversation_id:
+body = {"inputs": {"query": user_message}, "response_mode": "blocking", "user": "telegram-bot"}
+if conversation_id:
         body["conversation_id"] = conversation_id
     try:
         r = requests.post(DIFU_API_URL, headers=headers, json=body, timeout=30)
         r.raise_for_status()
         data = r.json()
-        return data.get("answer", "لم أتمكن من الحصول على رد."), data.get("conversation_id", conversation_id or "")
-    except Exception as e:
+return data.get("data", {}).get("outputs", {}).get("text", "لم أتمكن من الحصول على رد."), ""    except Exception as e:
         log.error(f"difu error: {e}")
         return "حدث خطأ في الاتصال بالذكاء الاصطناعي.", conversation_id or ""
 
