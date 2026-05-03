@@ -7,9 +7,8 @@ app = Flask(__name__)
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 DIFU_API_KEY   = os.environ.get("DIFU_API_KEY", "")
-DIFU_API_URL   = "https://api.difu.ai/v1/chat/messages"
+DIFU_API_URL = "https://api.dify.ai/v1/chat-messages"
 TELEGRAM_BASE  = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
-
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
